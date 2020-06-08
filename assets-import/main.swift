@@ -90,6 +90,10 @@ func filePathMapping(forDirectoryAt path: String, fileExtension: String) -> [Str
 }
 
 func importFiles(from originMapping: [String: URL], to destinationMapping: [String: URL], pdfFolderURL: URL, newItemsFolderURL: URL, force: Bool) {
+    var numberOfNewItems = 0
+    var numberOfImportedItems = 0
+    var numberOfSkippedItems = 0
+
     do {
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: pdfFolderURL, withIntermediateDirectories: true)
@@ -99,24 +103,31 @@ func importFiles(from originMapping: [String: URL], to destinationMapping: [Stri
             scaleSVG(at: svgURL, destination: pdfURL)
             if let assetURL = destinationMapping[fileName] {
                 if force || !image(at: pdfURL, isEqualToImageAt: assetURL) {
-                    let log = force ? " forced" : " changed"
+                    let log = force ? "imported (forced)" : " imported"
                     print(log)
                     try fileManager.removeItem(at: assetURL)
                     try fileManager.copyItem(at: pdfURL, to: assetURL)
+                    numberOfImportedItems += 1
                 } else {
-                    print(" not changed")
+                    print(" skipped")
+                    numberOfSkippedItems += 1
                 }
             } else {
                 print("new")
                 try fileManager.createDirectory(at: newItemsFolderURL, withIntermediateDirectories: true)
                 let newFileURL = newItemsFolderURL.appendingPathComponent(fileName).appendingPathExtension(fileExtensionPDF)
                 try fileManager.copyItem(at: pdfURL, to: newFileURL)
+                numberOfNewItems += 1
             }
         }
-
     } catch {
         print("Error copying file: ", error)
     }
+    print("\n")
+    print("Imported: \(numberOfImportedItems)")
+    print("Skipped: \(numberOfSkippedItems)")
+    print("New: \(numberOfNewItems)")
+    print("\n")
 }
 
 func image(at origin: URL, isEqualToImageAt destination: URL) -> Bool {
@@ -134,5 +145,4 @@ func scaleSVG(at origin: URL, destination: URL, scale: CGFloat = 0.5) {
     task.arguments = ["\(origin.path)", "--keep-aspect-ratio", "--zoom=\(scale)", "--format=pdf", "--output=\(destination.path)"]
     task.launch()
     task.waitUntilExit()
-    //return task.terminationStatus == 0
 }
