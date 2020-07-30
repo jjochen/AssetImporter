@@ -54,7 +54,8 @@ class AssetImporter {
             try svgFiles.forEach { (fileName: String, svgURL: URL) in
                 print(" \(fileName): ", terminator : "")
                 let pdfURL = intermediateURL(forFile: fileName)
-                scaleSVG(at: svgURL, destination: pdfURL)
+                let size = iconSize(forFile: fileName)
+                scaleSVG(at: svgURL, destination: pdfURL, size: size)
                 if let assetURL = existingAssets[fileName] {
                     if all || !image(at: pdfURL, isEqualToImageAt: assetURL) {
                         let log = all ? "imported (forced)" : " imported"
@@ -128,6 +129,22 @@ private extension AssetImporter {
         return newItemsDirectory.appendingPathComponent(fileName).appendingPathExtension(fileExtensionPDF)
     }
 
+    func iconSize(forFile fileName: String) -> CGSize? {
+        guard let range = fileName.range(of: #"_(\d+)pt$"#,
+                                         options: .regularExpression), !range.isEmpty else
+        {
+            return nil
+        }
+
+        let startIndex = fileName.index(range.lowerBound, offsetBy: 1)
+        let endIndex = fileName.index(range.upperBound, offsetBy: -2)
+        let sizeString = fileName[startIndex..<endIndex]
+        guard let size = Int(sizeString), size > 0 else {
+            return nil
+        }
+        return CGSize(width: size, height: size)
+    }
+
     func image(at origin: URL, isEqualToImageAt destination: URL) -> Bool {
         let task = Process()
         task.launchPath = launchPathImageMagick
@@ -137,10 +154,23 @@ private extension AssetImporter {
         return task.terminationStatus == 0
     }
 
-    func scaleSVG(at origin: URL, destination: URL, scale: CGFloat = 0.5) {
+    func scaleSVG(at origin: URL, destination: URL, size: CGSize? = nil, scale: CGFloat = 0.5) {
         let task = Process()
         task.launchPath = launchPathRSVG
-        task.arguments = ["\(origin.path)", "--keep-aspect-ratio", "--zoom=\(scale)", "--format=pdf", "--output=\(destination.path)"]
+        var arguments: [String] = []
+        arguments.append("\(origin.path)")
+        arguments.append("--output=\(destination.path)")
+        arguments.append("--keep-aspect-ratio")
+        arguments.append("--format=pdf")
+        if let size = size {
+            arguments.append("--width=\(Int(size.width))")
+            arguments.append("--height=\(Int(size.height))")
+        }
+        else
+        {
+            arguments.append("--zoom=\(scale)")
+        }
+        task.arguments = arguments
         task.launch()
         task.waitUntilExit()
     }
