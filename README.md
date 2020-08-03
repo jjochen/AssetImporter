@@ -3,7 +3,7 @@
 Import SVGs into Asset Catalog.
 
 ```
-USAGE: asset-import --origin-path <origin-path> --destination-path <destination-path> --pdf-path <pdf-path> --new-path <new-path> [--force]
+USAGE: asset-importer --origin-path <origin-path> --destination-path <destination-path> --pdf-path <pdf-path> --new-path <new-path> [--scale <scale>] [--force]
 
 OPTIONS:
   -o, --origin-path <origin-path>
@@ -14,6 +14,7 @@ OPTIONS:
                           Intermediate pdf folder path.
   -n, --new-path <new-path>
                           New items folder path.
+  -s, --scale <scale>     Default icon scale. (default: 0.5)
   --force                 Force import.
   -h, --help              Show help information.
 ```
