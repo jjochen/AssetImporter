@@ -1,83 +1,74 @@
 //
 //  AssetImporter.swift
-//  assets-import
+//  AssetImporter
 //
 //  Created by Jochen on 08.06.20.
 //  Copyright © 2020 Jochen Pfeiffer. All rights reserved.
 //
 
 import Foundation
+import Files
 
 class AssetImporter {
-
-    init(origin: URL, intermediate: URL, destination: URL, new: URL) {
-        originDirectory = origin
-        intermediateDirectory = intermediate
-        destinationDirectory = destination
-        newItemsDirectory = new
-    }
-
 
     private let fileExtensionPDF = "pdf"
     private let fileExtensionSVG = "svg"
     private let launchPathImageMagick = "/usr/local/bin/magick"
     private let launchPathRSVG = "/usr/local/bin/rsvg-convert"
 
-    private var originDirectory: URL
-    private var intermediateDirectory: URL
-    private var destinationDirectory: URL
-    private var newItemsDirectory: URL
-    private var svgFiles: [String: URL] = [:]
-    private var existingAssets: [String: URL] = [:]
+    public func importFiles(origin: String,
+                            intermediate: String,
+                            destination: String,
+                            new: String,
+                            scale: Float,
+                            force: Bool) throws {
 
-    public func importFiles(all: Bool = false) -> Bool {
+        let originFolder = try Folder(path: origin)
+        let destinationFolder = try Folder(path: destination)
+        let pdfFolder = try Folder(path: intermediate, createIfNeeded: true)
+        let newItemFolder = try Folder(path: new, createIfNeeded: true)
 
-        svgFiles = filePathMapping(forDirectoryAt: originDirectory, fileExtension: fileExtensionSVG)
+        let svgFiles = try filePathMapping(forFolder: originFolder, fileExtension: fileExtensionSVG)
         guard !svgFiles.isEmpty  else {
-            print("no files of type '\(fileExtensionSVG)' found at '\(originDirectory.path)'")
-            return false
+            print("No files of type '\(fileExtensionSVG)' found at '\(originFolder.path)'")
+            return
         }
-
-        existingAssets = filePathMapping(forDirectoryAt: destinationDirectory, fileExtension: fileExtensionPDF)
+        
+        let existingAssets = try filePathMapping(forFolder: destinationFolder, fileExtension: fileExtensionPDF)
         guard !existingAssets.isEmpty  else {
-            print("no files of type '\(fileExtensionPDF)' found at '\(destinationDirectory.path)'")
-            return false
+            print("No files of type '\(fileExtensionPDF)' found at '\(destinationFolder.path)'")
+            return
         }
-
+        
         var numberOfNewItems = 0
         var numberOfImportedItems = 0
         var numberOfSkippedItems = 0
 
-        do {
-            let fileManager = FileManager.default
-            try fileManager.createDirectory(at: intermediateDirectory, withIntermediateDirectories: true)
-            try svgFiles.forEach { (fileName: String, svgURL: URL) in
-                print(" \(fileName): ", terminator : "")
-                let pdfURL = intermediateURL(forFile: fileName)
-                let size = iconSize(forFile: fileName)
-                scaleSVG(at: svgURL, destination: pdfURL, size: size)
-                if let assetURL = existingAssets[fileName] {
-                    if all || !image(at: pdfURL, isEqualToImageAt: assetURL) {
-                        let log = all ? "imported (forced)" : " imported"
-                        print(log)
-                        try fileManager.removeItem(at: assetURL)
-                        try fileManager.copyItem(at: pdfURL, to: assetURL)
-                        numberOfImportedItems += 1
-                    } else {
-                        print(" skipped")
-                        numberOfSkippedItems += 1
+        try svgFiles.forEach { (fileName: String, svgFile: File) in
+            print(" \(fileName): ", terminator : "")
+            let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
+            let size = iconSize(forFile: fileName)
+            scaleSVG(at: svgFile.path, destination: pdfFilePath, size: size, scale: scale)
+            let pdfFile = try File(path: pdfFilePath)
+            if let assetFile = existingAssets[fileName] {
+                if force || !image(at: pdfFilePath, isEqualToImageAt: assetFile.path) {
+                    let log = force ? "imported (forced)" : " imported"
+                    print(log)
+                    guard let assetSubfolder = assetFile.parent else {
+                        return
                     }
+                    try assetFile.delete()
+                    try pdfFile.copy(to: assetSubfolder)
+                    numberOfImportedItems += 1
                 } else {
-                    print("new")
-                    try fileManager.createDirectory(at: newItemsDirectory, withIntermediateDirectories: true)
-                    let newFileURL = newItemURL(forFile: fileName)
-                    try fileManager.copyItem(at: pdfURL, to: newFileURL)
-                    numberOfNewItems += 1
+                    print(" skipped")
+                    numberOfSkippedItems += 1
                 }
+            } else {
+                print("new")
+                try pdfFile.copy(to: newItemFolder)
+                numberOfNewItems += 1
             }
-        } catch {
-            print("Error copying file: ", error)
-            return false
         }
 
         print("\n")
@@ -85,48 +76,39 @@ class AssetImporter {
         print("Skipped: \(numberOfSkippedItems)")
         print("New: \(numberOfNewItems)")
         print("\n")
+    }
+    
+}
 
-        return true
+private extension Folder {
+    init(path: String, createIfNeeded: Bool) throws {
+        if createIfNeeded {
+            try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        }
+        try self.init(path: path)
     }
 
+    func filePath(forFileWithName fileName: String, fileExtension: String) -> String {
+        return self.url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
+    }
 }
 
 private extension AssetImporter {
-
-    func filePathMapping(forDirectoryAt directoryURL: URL, fileExtension: String) -> [String: URL] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(at: directoryURL,
-                                                      includingPropertiesForKeys: nil,
-                                                      options: [.skipsHiddenFiles],
-                                                      errorHandler: { (url, error) -> Bool in
-                                                          print("directoryEnumerator error at \(url): ", error)
-                                                          return true
-        }) else {
-            return [:]
-        }
-
-        var mapping: [String: URL] = [:]
-        for case let fileURL as URL in enumerator {
-            guard fileURL.pathExtension == fileExtension else {
-                continue
+    
+    func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
+        var mapping: [String: File] = [:]
+        folder.files.recursive.enumerated().forEach { (index, file) in
+            guard file.extension == fileExtension else {
+                return
             }
-            let fileName = fileURL.deletingPathExtension().lastPathComponent
+            let fileName = file.nameExcludingExtension
             guard mapping[fileName] == nil else {
-                print("WARNING: multiple files called '\(fileName)' found at '\(directoryURL.path)!")
-                continue
+                print("WARNING: multiple files called '\(fileName)' found at '\(folder.path)!")
+                return
             }
-            mapping[fileName] = fileURL
+            mapping[fileName] = file
         }
-
         return mapping
-    }
-
-    func intermediateURL(forFile fileName: String) -> URL {
-        return intermediateDirectory.appendingPathComponent(fileName).appendingPathExtension(fileExtensionPDF)
-    }
-
-    func newItemURL(forFile fileName: String) -> URL {
-        return newItemsDirectory.appendingPathComponent(fileName).appendingPathExtension(fileExtensionPDF)
     }
 
     func iconSize(forFile fileName: String) -> CGSize? {
@@ -135,7 +117,7 @@ private extension AssetImporter {
         {
             return nil
         }
-
+        
         let startIndex = fileName.index(range.lowerBound, offsetBy: 1)
         let endIndex = fileName.index(range.upperBound, offsetBy: -2)
         let sizeString = fileName[startIndex..<endIndex]
@@ -144,22 +126,22 @@ private extension AssetImporter {
         }
         return CGSize(width: size, height: size)
     }
-
-    func image(at origin: URL, isEqualToImageAt destination: URL) -> Bool {
+    
+    func image(at origin: String, isEqualToImageAt destination: String) -> Bool {
         let task = Process()
         task.launchPath = launchPathImageMagick
-        task.arguments = ["compare", "-metric", "AE", "\(origin.path)", "\(destination.path)", "/tmp/difference.pdf"]
+        task.arguments = ["compare", "-metric", "AE", "\(origin)", "\(destination)", "/tmp/difference.pdf"]
         task.launch()
         task.waitUntilExit()
         return task.terminationStatus == 0
     }
-
-    func scaleSVG(at origin: URL, destination: URL, size: CGSize? = nil, scale: CGFloat = 0.5) {
+    
+    func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) {
         let task = Process()
         task.launchPath = launchPathRSVG
         var arguments: [String] = []
-        arguments.append("\(origin.path)")
-        arguments.append("--output=\(destination.path)")
+        arguments.append("\(origin)")
+        arguments.append("--output=\(destination)")
         arguments.append("--keep-aspect-ratio")
         arguments.append("--format=pdf")
         if let size = size {
