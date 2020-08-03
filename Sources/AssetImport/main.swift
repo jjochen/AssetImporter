@@ -42,14 +42,12 @@ struct AssetImport: ParsableCommand {
 
         let svgFiles = try filePathMapping(forFolder: originFolder, fileExtension: fileExtensionSVG)
         guard !svgFiles.isEmpty else {
-            print("No files of type '\(fileExtensionSVG)' found at '\(originFolder.path)'")
-            return
+            throw AssetImportError.noFilesFound(extension: fileExtensionSVG, path: originFolder.path)
         }
 
         let existingAssets = try filePathMapping(forFolder: destinationFolder, fileExtension: fileExtensionPDF)
         guard !existingAssets.isEmpty else {
-            print("No files of type '\(fileExtensionPDF)' found at '\(destinationFolder.path)'")
-            return
+            throw AssetImportError.noFilesFound(extension: fileExtensionPDF, path: destinationFolder.path)
         }
 
         var numberOfNewItems = 0
@@ -67,7 +65,7 @@ struct AssetImport: ParsableCommand {
                     let log = force ? "imported (forced)" : " imported"
                     print(log)
                     guard let assetSubfolder = assetFile.parent else {
-                        return
+                        throw AssetImportError.unknown
                     }
                     try assetFile.delete()
                     try pdfFile.copy(to: assetSubfolder)
@@ -91,30 +89,20 @@ struct AssetImport: ParsableCommand {
     }
 }
 
-private extension Folder {
-    init(path: String, createIfNeeded: Bool) throws {
-        if createIfNeeded {
-            try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
-        }
-        try self.init(path: path)
-    }
+AssetImport.main()
 
-    func filePath(forFileWithName fileName: String, fileExtension: String) -> String {
-        return url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
-    }
-}
+// MARK: - Extensions
 
 private extension AssetImport {
     func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
         var mapping: [String: File] = [:]
-        folder.files.recursive.enumerated().forEach { _, file in
+        try folder.files.recursive.enumerated().forEach { _, file in
             guard file.extension == fileExtension else {
                 return
             }
             let fileName = file.nameExcludingExtension
             guard mapping[fileName] == nil else {
-                print("WARNING: multiple files called '\(fileName)' found at '\(folder.path)!")
-                return
+                throw AssetImportError.multipleFilesWithName(name: fileName, path: folder.path)
             }
             mapping[fileName] = file
         }
@@ -166,4 +154,38 @@ private extension AssetImport {
     }
 }
 
-AssetImport.main()
+private extension Folder {
+    init(path: String, createIfNeeded: Bool) throws {
+        if createIfNeeded {
+            try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        }
+        try self.init(path: path)
+    }
+
+    func filePath(forFileWithName fileName: String, fileExtension: String) -> String {
+        return url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
+    }
+}
+
+// MARK: - Errors
+
+enum AssetImportError: Error {
+    case noFilesFound(extension: String, path: String)
+    case multipleFilesWithName(name: String, path: String)
+    case unknown
+}
+
+extension AssetImportError: CustomStringConvertible {
+    public var description: String {
+        var message: String
+        switch self {
+        case let .noFilesFound(extension: fileExtension, path: path):
+            message = "No files of type '\(fileExtension)' found at '\(path)'."
+        case let .multipleFilesWithName(name: fileName, path: path):
+            message = "Multiple files called '\(fileName)' found at '\(path)'."
+        case .unknown:
+            message = "Unknown."
+        }
+        return message
+    }
+}
