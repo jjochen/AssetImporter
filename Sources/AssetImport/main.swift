@@ -55,14 +55,14 @@ struct AssetImport: ParsableCommand {
         var numberOfSkippedItems = 0
 
         try svgFiles.forEach { (fileName: String, svgFile: File) in
-            print(" \(fileName): ", terminator: "")
+            print("\(fileName): ", terminator: "")
             let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
             let size = iconSize(forFile: fileName)
             scaleSVG(at: svgFile.path, destination: pdfFilePath, size: size, scale: scale)
             let pdfFile = try File(path: pdfFilePath)
             if let assetFile = existingAssets[fileName] {
                 if force || !image(at: pdfFilePath, isEqualToImageAt: assetFile.path) {
-                    let log = force ? "imported (forced)" : " imported"
+                    let log = force ? "imported (forced)" : "imported"
                     print(log)
                     guard let assetSubfolder = assetFile.parent else {
                         throw AssetImportError.unknown
@@ -71,7 +71,7 @@ struct AssetImport: ParsableCommand {
                     try pdfFile.copy(to: assetSubfolder)
                     numberOfImportedItems += 1
                 } else {
-                    print(" skipped")
+                    print("skipped")
                     numberOfSkippedItems += 1
                 }
             } else {
@@ -126,17 +126,23 @@ private extension AssetImport {
     }
 
     func image(at origin: String, isEqualToImageAt destination: String) -> Bool {
-        let task = Process()
-        task.launchPath = launchPathImageMagick
-        task.arguments = ["compare", "-metric", "AE", "\(origin)", "\(destination)", "/tmp/difference.pdf"]
-        task.launch()
-        task.waitUntilExit()
-        return task.terminationStatus == 0
+        let process = Process()
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: launchPathImageMagick)
+        process.arguments = ["compare", "-metric", "AE", "\(origin)", "\(destination)", "/tmp/difference.pdf"]
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+        process.launch()
+        process.waitUntilExit()
+        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+        let error = String(decoding: errorData, as: UTF8.self)
+        return Int(error) == 0
     }
 
     func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) {
-        let task = Process()
-        task.launchPath = launchPathRSVG
+        let process = Process()
+        process.launchPath = launchPathRSVG
         var arguments: [String] = []
         arguments.append("\(origin)")
         arguments.append("--output=\(destination)")
@@ -148,9 +154,9 @@ private extension AssetImport {
         } else {
             arguments.append("--zoom=\(scale)")
         }
-        task.arguments = arguments
-        task.launch()
-        task.waitUntilExit()
+        process.arguments = arguments
+        process.launch()
+        process.waitUntilExit()
     }
 }
 
