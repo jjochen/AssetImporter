@@ -4,6 +4,9 @@ import PackageDescription
 
 let package = Package(
     name: "AssetImport",
+    platforms: [
+        .macOS(.v10_15),
+    ],
     products: [
         .executable(
             name: "asset-import",
