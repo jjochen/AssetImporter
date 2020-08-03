@@ -7,17 +7,20 @@ let package = Package(
     products: [
         .executable(
             name: "asset-import",
-            targets: ["AssetImporter"]),
+            targets: ["AssetImporter"]
+        ),
     ],
     dependencies: [
         .package(
             name: "swift-argument-parser",
             url: "https://github.com/apple/swift-argument-parser",
-            from: "0.2.0"),
+            from: "0.2.0"
+        ),
         .package(
             name: "Files",
             url: "https://github.com/johnsundell/files",
-            from: "4.0.0"),
+            from: "4.0.0"
+        ),
     ],
     targets: [
         .target(
@@ -25,9 +28,11 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "Files",
-            ]),
+            ]
+        ),
         .testTarget(
             name: "AssetImporterTests",
-            dependencies: ["AssetImporter"]),
+            dependencies: ["AssetImporter"]
+        ),
     ]
 )

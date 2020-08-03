@@ -1,5 +1,5 @@
-import XCTest
 @testable import AssetImporter
+import XCTest
 
 final class AssetImporterTests: XCTestCase {
     func testExample() {

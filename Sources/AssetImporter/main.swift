@@ -6,14 +6,11 @@
 //  Copyright © 2020 Jochen Pfeiffer. All rights reserved.
 //
 
-
-import Foundation
 import ArgumentParser
 import Files
-
+import Foundation
 
 struct AssetImporter: ParsableCommand {
-
     @Option(name: .shortAndLong, help: "Origin folder path.")
     var originPath: String
 
@@ -32,27 +29,25 @@ struct AssetImporter: ParsableCommand {
     @Flag(help: "Force import.")
     var force = false
 
-    
     private let fileExtensionPDF = "pdf"
     private let fileExtensionSVG = "svg"
     private let launchPathImageMagick = "/usr/local/bin/magick"
     private let launchPathRSVG = "/usr/local/bin/rsvg-convert"
 
     mutating func run() throws {
-
         let originFolder = try Folder(path: originPath)
         let destinationFolder = try Folder(path: destinationPath)
         let pdfFolder = try Folder(path: pdfPath, createIfNeeded: true)
         let newItemFolder = try Folder(path: newPath, createIfNeeded: true)
 
         let svgFiles = try filePathMapping(forFolder: originFolder, fileExtension: fileExtensionSVG)
-        guard !svgFiles.isEmpty  else {
+        guard !svgFiles.isEmpty else {
             print("No files of type '\(fileExtensionSVG)' found at '\(originFolder.path)'")
             return
         }
 
         let existingAssets = try filePathMapping(forFolder: destinationFolder, fileExtension: fileExtensionPDF)
-        guard !existingAssets.isEmpty  else {
+        guard !existingAssets.isEmpty else {
             print("No files of type '\(fileExtensionPDF)' found at '\(destinationFolder.path)'")
             return
         }
@@ -62,7 +57,7 @@ struct AssetImporter: ParsableCommand {
         var numberOfSkippedItems = 0
 
         try svgFiles.forEach { (fileName: String, svgFile: File) in
-            print(" \(fileName): ", terminator : "")
+            print(" \(fileName): ", terminator: "")
             let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
             let size = iconSize(forFile: fileName)
             scaleSVG(at: svgFile.path, destination: pdfFilePath, size: size, scale: scale)
@@ -94,7 +89,6 @@ struct AssetImporter: ParsableCommand {
         print("New: \(numberOfNewItems)")
         print("\n")
     }
-
 }
 
 private extension Folder {
@@ -106,15 +100,14 @@ private extension Folder {
     }
 
     func filePath(forFileWithName fileName: String, fileExtension: String) -> String {
-        return self.url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
+        return url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
     }
 }
 
 private extension AssetImporter {
-
     func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
         var mapping: [String: File] = [:]
-        folder.files.recursive.enumerated().forEach { (index, file) in
+        folder.files.recursive.enumerated().forEach { _, file in
             guard file.extension == fileExtension else {
                 return
             }
@@ -130,14 +123,13 @@ private extension AssetImporter {
 
     func iconSize(forFile fileName: String) -> CGSize? {
         guard let range = fileName.range(of: #"_(\d+)pt$"#,
-                                         options: .regularExpression), !range.isEmpty else
-        {
+                                         options: .regularExpression), !range.isEmpty else {
             return nil
         }
 
         let startIndex = fileName.index(range.lowerBound, offsetBy: 1)
         let endIndex = fileName.index(range.upperBound, offsetBy: -2)
-        let sizeString = fileName[startIndex..<endIndex]
+        let sizeString = fileName[startIndex ..< endIndex]
         guard let size = Int(sizeString), size > 0 else {
             return nil
         }
@@ -164,9 +156,7 @@ private extension AssetImporter {
         if let size = size {
             arguments.append("--width=\(Int(size.width))")
             arguments.append("--height=\(Int(size.height))")
-        }
-        else
-        {
+        } else {
             arguments.append("--zoom=\(scale)")
         }
         task.arguments = arguments
@@ -175,7 +165,4 @@ private extension AssetImporter {
     }
 }
 
-
 AssetImporter.main()
-
-
