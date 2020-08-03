@@ -3,11 +3,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "AssetImporter",
+    name: "AssetImport",
     products: [
         .executable(
             name: "asset-import",
-            targets: ["AssetImporter"]
+            targets: ["AssetImport"]
         ),
     ],
     dependencies: [
@@ -24,15 +24,15 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "AssetImporter",
+            name: "AssetImport",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "Files",
             ]
         ),
         .testTarget(
-            name: "AssetImporterTests",
-            dependencies: ["AssetImporter"]
+            name: "AssetImportTests",
+            dependencies: ["AssetImport"]
         ),
     ]
 )

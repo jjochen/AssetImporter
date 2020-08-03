@@ -1,7 +1,7 @@
 import XCTest
 
-import AssetImporterTests
+import AssetImportTests
 
 var tests = [XCTestCaseEntry]()
-tests += AssetImporterTests.allTests()
+tests += AssetImportTests.allTests()
 XCTMain(tests)

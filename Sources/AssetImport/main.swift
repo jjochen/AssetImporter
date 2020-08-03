@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  AssetImporter
+//  AssetImport
 //
 //  Created by Jochen on 05.06.20.
 //  Copyright © 2020 Jochen Pfeiffer. All rights reserved.
@@ -10,7 +10,7 @@ import ArgumentParser
 import Files
 import Foundation
 
-struct AssetImporter: ParsableCommand {
+struct AssetImport: ParsableCommand {
     @Option(name: .shortAndLong, help: "Origin folder path.")
     var originPath: String
 
@@ -104,7 +104,7 @@ private extension Folder {
     }
 }
 
-private extension AssetImporter {
+private extension AssetImport {
     func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
         var mapping: [String: File] = [:]
         folder.files.recursive.enumerated().forEach { _, file in
@@ -123,7 +123,8 @@ private extension AssetImporter {
 
     func iconSize(forFile fileName: String) -> CGSize? {
         guard let range = fileName.range(of: #"_(\d+)pt$"#,
-                                         options: .regularExpression), !range.isEmpty else {
+                                         options: .regularExpression), !range.isEmpty
+        else {
             return nil
         }
 
@@ -165,4 +166,4 @@ private extension AssetImporter {
     }
 }
 
-AssetImporter.main()
+AssetImport.main()
