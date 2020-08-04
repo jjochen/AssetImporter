@@ -58,7 +58,11 @@ struct AssetImport: ParsableCommand {
             print("\(fileName): ", terminator: "")
             let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
             let size = iconSize(forFile: fileName)
-            scaleSVG(at: svgFile.path, destination: pdfFilePath, size: size, scale: scale)
+            let scaleSuccess = scaleSVG(at: svgFile.path, destination: pdfFilePath, size: size, scale: scale)
+            if !scaleSuccess {
+                print("error")
+                return
+            }
             let pdfFile = try File(path: pdfFilePath)
             if let assetFile = existingAssets[fileName] {
                 if force || !image(at: pdfFilePath, isEqualToImageAt: assetFile.path) {
@@ -71,7 +75,7 @@ struct AssetImport: ParsableCommand {
                     try pdfFile.copy(to: assetSubfolder)
                     numberOfImportedItems += 1
                 } else {
-                    print("skipped")
+                    print("no changes")
                     numberOfSkippedItems += 1
                 }
             } else {
@@ -126,23 +130,12 @@ private extension AssetImport {
     }
 
     func image(at origin: String, isEqualToImageAt destination: String) -> Bool {
-        let process = Process()
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.executableURL = URL(fileURLWithPath: launchPathImageMagick)
-        process.arguments = ["compare", "-metric", "AE", "\(origin)", "\(destination)", "/tmp/difference.pdf"]
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-        process.launch()
-        process.waitUntilExit()
-        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        let error = String(decoding: errorData, as: UTF8.self)
-        return Int(error) == 0
+        let arguments = ["compare", "-metric", "AE", "\(origin)", "\(destination)", "/tmp/difference.pdf"]
+        let result = runProcess(withExecutablePath: launchPathImageMagick, arguments: arguments)
+        return result.success && Int(result.error) == 0
     }
 
-    func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) {
-        let process = Process()
-        process.launchPath = launchPathRSVG
+    func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) -> Bool {
         var arguments: [String] = []
         arguments.append("\(origin)")
         arguments.append("--output=\(destination)")
@@ -154,9 +147,26 @@ private extension AssetImport {
         } else {
             arguments.append("--zoom=\(scale)")
         }
+        let result = runProcess(withExecutablePath: launchPathRSVG, arguments: arguments)
+        return result.success
+    }
+
+    func runProcess(withExecutablePath path: String, arguments: [String]?) -> (success: Bool, output: String, error: String) {
+        let process = Process()
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: path)
         process.arguments = arguments
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
         process.launch()
         process.waitUntilExit()
+        let success = process.terminationStatus == 0
+        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(decoding: outputData, as: UTF8.self)
+        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+        let error = String(decoding: errorData, as: UTF8.self)
+        return (success, output, error)
     }
 }
 
