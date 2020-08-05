@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "AssetImport",
+    name: "AssetImporter",
     platforms: [
         .macOS(.v10_15),
     ],
@@ -11,6 +11,10 @@ let package = Package(
         .executable(
             name: "asset-import",
             targets: ["AssetImport"]
+        ),
+        .library(
+            name: "AssetImporter",
+            targets: ["AssetImporter"]
         ),
     ],
     dependencies: [
@@ -29,13 +33,21 @@ let package = Package(
         .target(
             name: "AssetImport",
             dependencies: [
+                "AssetImporter",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
+        .target(
+            name: "AssetImporter",
+            dependencies: [
                 "Files",
             ]
         ),
         .testTarget(
-            name: "AssetImportTests",
-            dependencies: ["AssetImport"]
+            name: "AssetImporterTests",
+            dependencies: [
+                "AssetImporter",
+            ]
         ),
     ]
 )

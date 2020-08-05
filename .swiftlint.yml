@@ -1,13 +1,12 @@
 included:
   - Sources
   - Tests
-excluded:
-  - .build
 
 disabled_rules:
   - redundant_objc_attribute
   - trailing_comma
   - let_var_whitespace
+  - large_tuple
 
 opt_in_rules:
   - empty_count

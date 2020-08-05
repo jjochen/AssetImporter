@@ -5,6 +5,9 @@ BUILD_PATH=$(BUILD_DIR)/release/$(BIN_NAME)
 
 all: build install
 
+test:
+	@swift test
+
 build:
 	@swift build -c release
 

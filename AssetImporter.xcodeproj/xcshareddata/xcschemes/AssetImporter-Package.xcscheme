@@ -14,10 +14,24 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AssetImport::AssetImport"
+               BlueprintIdentifier = "AssetImporter::AssetImport"
                BuildableName = "AssetImport"
                BlueprintName = "AssetImport"
-               ReferencedContainer = "container:AssetImport.xcodeproj">
+               ReferencedContainer = "container:AssetImporter.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AssetImporter::AssetImporter"
+               BuildableName = "AssetImporter.framework"
+               BlueprintName = "AssetImporter"
+               ReferencedContainer = "container:AssetImporter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +46,10 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AssetImport::AssetImportTests"
-               BuildableName = "AssetImportTests.xctest"
-               BlueprintName = "AssetImportTests"
-               ReferencedContainer = "container:AssetImport.xcodeproj">
+               BlueprintIdentifier = "AssetImporter::AssetImporterTests"
+               BuildableName = "AssetImporterTests.xctest"
+               BlueprintName = "AssetImporterTests"
+               ReferencedContainer = "container:AssetImporter.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -50,16 +64,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AssetImport::AssetImport"
-            BuildableName = "AssetImport"
-            BlueprintName = "AssetImport"
-            ReferencedContainer = "container:AssetImport.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

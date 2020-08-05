@@ -1,4 +1,4 @@
-# AssetImport
+# AssetImporter
 
 Scale and import SVGs into Xcode asset catalog as PDFs.
 
