@@ -47,6 +47,7 @@ let package = Package(
             name: "AssetImporterTests",
             dependencies: [
                 "AssetImporter",
+                "Files",
             ]
         ),
     ]

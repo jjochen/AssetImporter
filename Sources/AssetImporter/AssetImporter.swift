@@ -10,26 +10,12 @@ import Files
 import Foundation
 
 public struct AssetImporter {
-    public var originPath: String
-    public var destinationPath: String
-    public var pdfPath: String
-    public var newPath: String
-    public var scale: Float
-    public var force: Bool
-
     private let fileExtensionPDF = "pdf"
     private let fileExtensionSVG = "svg"
 
-    public init(originPath: String, destinationPath: String, pdfPath: String, newPath: String, scale: Float, force: Bool) {
-        self.originPath = originPath
-        self.destinationPath = destinationPath
-        self.pdfPath = pdfPath
-        self.newPath = newPath
-        self.scale = scale
-        self.force = force
-    }
+    public init() {}
 
-    public func importAssets() throws {
+    public func importAssets(originPath: String, destinationPath: String, pdfPath: String, newPath: String, scale: Float, force: Bool) throws {
         let originFolder = try Folder(path: originPath)
         let destinationFolder = try Folder(path: destinationPath)
         let pdfFolder = try Folder(path: pdfPath, createIfNeeded: true)
@@ -88,8 +74,6 @@ public struct AssetImporter {
     }
 }
 
-// MARK: - Extensions
-
 private extension AssetImporter {
     func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
         var mapping: [String: File] = [:]
@@ -120,89 +104,5 @@ private extension AssetImporter {
             return nil
         }
         return CGSize(width: size, height: size)
-    }
-}
-
-private extension Folder {
-    init(path: String, createIfNeeded: Bool) throws {
-        if createIfNeeded {
-            try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
-        }
-        try self.init(path: path)
-    }
-
-    func filePath(forFileWithName fileName: String, fileExtension: String) -> String {
-        return url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
-    }
-}
-
-// MARK: - Tasks
-
-struct Tasks {
-    private static let launchPathImageMagick = "/usr/local/bin/magick"
-    private static let launchPathRSVG = "/usr/local/bin/rsvg-convert"
-
-    static func image(at origin: String, isEqualToImageAt destination: String) -> Bool {
-        let arguments = ["compare", "-metric", "AE", "\(origin)", "\(destination)", "/tmp/difference.pdf"]
-        let result = runProcess(withExecutablePath: launchPathImageMagick, arguments: arguments)
-        return result.success && Int(result.error) == 0
-    }
-
-    static func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) -> Bool {
-        var arguments: [String] = []
-        arguments.append("\(origin)")
-        arguments.append("--output=\(destination)")
-        arguments.append("--keep-aspect-ratio")
-        arguments.append("--format=pdf")
-        if let size = size {
-            arguments.append("--width=\(Int(size.width))")
-            arguments.append("--height=\(Int(size.height))")
-        } else {
-            arguments.append("--zoom=\(scale)")
-        }
-        let result = runProcess(withExecutablePath: launchPathRSVG, arguments: arguments)
-        return result.success
-    }
-
-    private static func runProcess(withExecutablePath path: String,
-                                   arguments: [String]?) -> (success: Bool, output: String, error: String) {
-        let process = Process()
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-        process.launch()
-        process.waitUntilExit()
-        let success = process.terminationStatus == 0
-        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(decoding: outputData, as: UTF8.self)
-        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        let error = String(decoding: errorData, as: UTF8.self)
-        return (success, output, error)
-    }
-}
-
-// MARK: - Errors
-
-enum AssetImporterError: Error {
-    case noFilesFound(extension: String, path: String)
-    case multipleFilesWithName(name: String, path: String)
-    case unknown
-}
-
-extension AssetImporterError: CustomStringConvertible {
-    public var description: String {
-        var message: String
-        switch self {
-        case let .noFilesFound(extension: fileExtension, path: path):
-            message = "No files of type '\(fileExtension)' found at '\(path)'."
-        case let .multipleFilesWithName(name: fileName, path: path):
-            message = "Multiple files called '\(fileName)' found at '\(path)'."
-        case .unknown:
-            message = "Unknown."
-        }
-        return message
     }
 }

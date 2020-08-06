@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AssetImporter::AssetImport"
-               BuildableName = "AssetImport"
-               BlueprintName = "AssetImport"
+               BlueprintIdentifier = "AssetImporter::AssetImporter"
+               BuildableName = "AssetImporter.framework"
+               BlueprintName = "AssetImporter"
                ReferencedContainer = "container:AssetImporter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AssetImporter::AssetImporter"
-               BuildableName = "AssetImporter.framework"
-               BlueprintName = "AssetImporter"
+               BlueprintIdentifier = "AssetImporter::AssetImport"
+               BuildableName = "AssetImport"
+               BlueprintName = "AssetImport"
                ReferencedContainer = "container:AssetImporter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
