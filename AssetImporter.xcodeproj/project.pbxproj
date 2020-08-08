@@ -32,6 +32,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		19E7713C24DF30A400E0E8C7 /* CommandLineTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E7713A24DF305E00E0E8C7 /* CommandLineTaskTests.swift */; };
 		OBJ_100 /* ArgumentSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* ArgumentSet.swift */; };
 		OBJ_101 /* ArgumentSetSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* ArgumentSetSequence.swift */; };
 		OBJ_102 /* CommandParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* CommandParser.swift */; };
@@ -54,7 +55,7 @@
 		OBJ_126 /* Files.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Files::Files::Product" /* Files.framework */; };
 		OBJ_136 /* AssetImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* AssetImporter.swift */; };
 		OBJ_137 /* AssetImporterError.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* AssetImporterError.swift */; };
-		OBJ_138 /* CommandLineTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* CommandLineTasks.swift */; };
+		OBJ_138 /* CommandLineTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* CommandLineTask.swift */; };
 		OBJ_139 /* Folder+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* Folder+Convenience.swift */; };
 		OBJ_141 /* Files.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Files::Files::Product" /* Files.framework */; };
 		OBJ_148 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
@@ -130,16 +131,31 @@
 			remoteGlobalIDString = "Files::Files";
 			remoteInfo = Files;
 		};
+		19E7713824DE8E9700E0E8C7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "AssetImporter::AssetImporterTests";
+			remoteInfo = AssetImporterTests;
+		};
+		19E7713924DE8E9700E0E8C7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "AssetImporter::AssetImport";
+			remoteInfo = AssetImport;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19E7713A24DF305E00E0E8C7 /* CommandLineTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLineTaskTests.swift; sourceTree = "<group>"; };
 		"AssetImporter::AssetImport::Product" /* AssetImport */ = {isa = PBXFileReference; lastKnownFileType = text; path = AssetImport; sourceTree = BUILT_PRODUCTS_DIR; };
 		"AssetImporter::AssetImporter::Product" /* AssetImporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AssetImporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"AssetImporter::AssetImporterTests::Product" /* AssetImporterTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AssetImporterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Files::Files::Product" /* Files.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Files.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_11 /* AssetImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetImporter.swift; sourceTree = "<group>"; };
 		OBJ_12 /* AssetImporterError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetImporterError.swift; sourceTree = "<group>"; };
-		OBJ_13 /* CommandLineTasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLineTasks.swift; sourceTree = "<group>"; };
+		OBJ_13 /* CommandLineTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLineTask.swift; sourceTree = "<group>"; };
 		OBJ_14 /* Folder+Convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Folder+Convenience.swift"; sourceTree = "<group>"; };
 		OBJ_17 /* AssetImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetImporterTests.swift; sourceTree = "<group>"; };
 		OBJ_18 /* TestFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFolder.swift; sourceTree = "<group>"; };
@@ -239,7 +255,7 @@
 			children = (
 				OBJ_11 /* AssetImporter.swift */,
 				OBJ_12 /* AssetImporterError.swift */,
-				OBJ_13 /* CommandLineTasks.swift */,
+				OBJ_13 /* CommandLineTask.swift */,
 				OBJ_14 /* Folder+Convenience.swift */,
 			);
 			name = AssetImporter;
@@ -258,6 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_17 /* AssetImporterTests.swift */,
+				19E7713A24DF305E00E0E8C7 /* CommandLineTaskTests.swift */,
 				OBJ_18 /* TestFolder.swift */,
 				OBJ_19 /* XCTestManifests.swift */,
 			);
@@ -609,7 +626,7 @@
 			files = (
 				OBJ_136 /* AssetImporter.swift in Sources */,
 				OBJ_137 /* AssetImporterError.swift in Sources */,
-				OBJ_138 /* CommandLineTasks.swift in Sources */,
+				OBJ_138 /* CommandLineTask.swift in Sources */,
 				OBJ_139 /* Folder+Convenience.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -628,6 +645,7 @@
 			files = (
 				OBJ_159 /* AssetImporterTests.swift in Sources */,
 				OBJ_160 /* TestFolder.swift in Sources */,
+				19E7713C24DF30A400E0E8C7 /* CommandLineTaskTests.swift in Sources */,
 				OBJ_161 /* XCTestManifests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -724,7 +742,7 @@
 		OBJ_153 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "AssetImporter::AssetImporterTests" /* AssetImporterTests */;
-			targetProxy = "AssetImporter::AssetImporterTests" /* AssetImporterTests */;
+			targetProxy = 19E7713824DE8E9700E0E8C7 /* PBXContainerItemProxy */;
 		};
 		OBJ_165 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -739,7 +757,7 @@
 		OBJ_183 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "AssetImporter::AssetImport" /* AssetImport */;
-			targetProxy = "AssetImporter::AssetImport" /* AssetImport */;
+			targetProxy = 19E7713924DE8E9700E0E8C7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

@@ -55,6 +55,10 @@ struct TestFolder {
         return try file(forResource: resource).path
     }
 
+    func filePathInWorkFolder(forFileNamed name: String) -> String {
+        return workFolder.url.appendingPathComponent(name).path
+    }
+
     func delete() throws {
         try folder.delete()
     }

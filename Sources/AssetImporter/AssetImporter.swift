@@ -39,14 +39,14 @@ public struct AssetImporter {
             print("\(fileName): ", terminator: "")
             let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
             let size = iconSize(forFile: fileName)
-            let scaleSuccess = Tasks.scaleSVG(at: svgFile.path, destination: pdfFilePath, size: size, scale: scale)
-            if !scaleSuccess {
-                print("error")
-                return
-            }
+            CommandLineTask.scaleSVG(at: svgFile.path,
+                                     destination: pdfFilePath,
+                                     size: size,
+                                     scale: scale)
             let pdfFile = try File(path: pdfFilePath)
             if let assetFile = existingAssets[fileName] {
-                if force || !Tasks.image(at: pdfFilePath, isEqualToImageAt: assetFile.path) {
+                if force || !CommandLineTask.image(at: pdfFilePath,
+                                                   isEqualToImageAt: assetFile.path) {
                     let log = force ? "imported (forced)" : "imported"
                     print(log)
                     guard let assetSubfolder = assetFile.parent else {

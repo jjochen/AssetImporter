@@ -1,5 +1,5 @@
 //
-//  CommandLineTasks.swift
+//  CommandLineTask.swift
 //  ArgumentParser
 //
 //  Created by Jochen on 06.08.20.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-internal struct Tasks {
+internal struct CommandLineTask {
     private static let launchPathImageMagick = "/usr/local/bin/magick"
     private static let launchPathRSVG = "/usr/local/bin/rsvg-convert"
 
@@ -17,7 +17,7 @@ internal struct Tasks {
         return result.success && Int(result.error) == 0
     }
 
-    static func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) -> Bool {
+    static func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) {
         var arguments: [String] = []
         arguments.append("\(origin)")
         arguments.append("--output=\(destination)")
@@ -29,12 +29,13 @@ internal struct Tasks {
         } else {
             arguments.append("--zoom=\(scale)")
         }
-        let result = runProcess(withExecutablePath: launchPathRSVG, arguments: arguments)
-        return result.success
+        runProcess(withExecutablePath: launchPathRSVG, arguments: arguments)
+        // ToDo throw Error
     }
 }
 
-private extension Tasks {
+private extension CommandLineTask {
+    @discardableResult
     private static func runProcess(withExecutablePath path: String,
                                    arguments: [String]?) -> (success: Bool, output: String, error: String) {
         let process = Process()
