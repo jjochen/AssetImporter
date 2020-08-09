@@ -17,7 +17,7 @@ internal struct CommandLineTask {
         return result.success && Int(result.error) == 0
     }
 
-    static func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) {
+    static func scaleSVG(at origin: String, destination: String, size: CGSize? = nil, scale: Float) throws {
         var arguments: [String] = []
         arguments.append("\(origin)")
         arguments.append("--output=\(destination)")
@@ -29,8 +29,10 @@ internal struct CommandLineTask {
         } else {
             arguments.append("--zoom=\(scale)")
         }
-        runProcess(withExecutablePath: launchPathRSVG, arguments: arguments)
-        // ToDo throw Error
+        let result = runProcess(withExecutablePath: launchPathRSVG, arguments: arguments)
+        if !result.success {
+            throw AssetImporterError.commandLineError(message: result.error)
+        }
     }
 }
 

@@ -30,13 +30,12 @@ struct AssetImport: ParsableCommand {
     var force = false
 
     mutating func run() throws {
-        let importer = AssetImporter()
-        try importer.importAssets(originPath: originPath,
-                                  destinationPath: destinationPath,
-                                  pdfPath: pdfPath,
-                                  newPath: newPath,
-                                  scale: scale,
-                                  force: force)
+        try AssetImporter.importAssets(originPath: originPath,
+                                       destinationPath: destinationPath,
+                                       pdfPath: pdfPath,
+                                       newPath: newPath,
+                                       scale: scale,
+                                       force: force)
     }
 }
 
