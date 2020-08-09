@@ -6,27 +6,27 @@
 //
 
 @testable import AssetImporter
-import XCTest
-import Foundation
 import Files
+import Foundation
+import XCTest
 
 final class CommandLineTaskTests: XCTestCase {
     var testFolder: TestFolder!
 
     override func setUp() {
         super.setUp()
-        self.testFolder = try? TestFolder()
+        testFolder = try? TestFolder()
     }
 
     override func tearDown() {
-        try! self.testFolder.delete()
+        try! testFolder.delete()
         super.tearDown()
     }
 
     func testResourcesReadable() {
-            XCTAssertNotNil(try testFolder.file(forResource: .add16ptSVG))
-            XCTAssertNotNil(try testFolder.file(forResource: .add16ptRoundedSVG))
-
+        XCTAssertNotNil(try testFolder.file(forResource: .add16ptSVG))
+        XCTAssertNotNil(try testFolder.file(forResource: .add16ptRoundedSVG))
+        XCTAssertNotNil(try testFolder.file(forResource: .add16ptRoundedPDF))
     }
 
     func testScaleSVGTask() {
