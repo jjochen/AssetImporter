@@ -13,7 +13,18 @@ public struct AssetImporter {
     private static let fileExtensionPDF = "pdf"
     private static let fileExtensionSVG = "svg"
 
-    public static func importAssets(originPath: String, destinationPath: String, pdfPath: String, newPath: String, scale: Float, force: Bool) throws {
+    internal enum ImportState: String {
+        case imported
+        case skipped
+        case new
+    }
+
+    public static func importAssets(originPath: String,
+                                    destinationPath: String,
+                                    pdfPath: String,
+                                    newPath: String,
+                                    scale: Float,
+                                    force: Bool) throws {
         let originFolder = try Folder(path: originPath)
         let destinationFolder = try Folder(path: destinationPath)
         let pdfFolder = try Folder(path: pdfPath, createIfNeeded: true)
@@ -35,8 +46,9 @@ public struct AssetImporter {
         var numberOfImportedItems = 0
         var numberOfSkippedItems = 0
 
+        // TODO: needs refactoring
         try svgFiles.forEach { (fileName: String, svgFile: File) in
-            print("\(fileName): ", terminator: "")
+            var state: ImportState
             let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
             let size = iconSize(forFile: fileName)
             try CommandLineTask.scaleSVG(at: svgFile.path,
@@ -47,21 +59,27 @@ public struct AssetImporter {
             if let assetFile = existingAssets[fileName] {
                 if force || !CommandLineTask.image(at: pdfFilePath,
                                                    isEqualToImageAt: assetFile.path) {
-                    let log = force ? "imported (forced)" : "imported"
-                    print(log)
-                    guard let assetSubfolder = assetFile.parent else {
+                    guard let assetParent = assetFile.parent else {
                         throw AssetImporterError.unknown(message: "file has no no parent")
                     }
                     try assetFile.delete()
-                    try pdfFile.copy(to: assetSubfolder)
-                    numberOfImportedItems += 1
+                    try pdfFile.copy(to: assetParent)
+                    state = .imported
                 } else {
-                    print("no changes")
-                    numberOfSkippedItems += 1
+                    state = .skipped
                 }
             } else {
-                print("new")
                 try pdfFile.copy(to: newItemFolder)
+                state = .new
+            }
+
+            print("\(fileName): \(state)")
+            switch state {
+            case .imported:
+                numberOfImportedItems += 1
+            case .skipped:
+                numberOfSkippedItems += 1
+            case .new:
                 numberOfNewItems += 1
             }
         }
