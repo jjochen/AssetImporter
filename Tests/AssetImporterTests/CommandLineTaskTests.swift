@@ -119,12 +119,16 @@ final class CommandLineTaskTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
+}
 
+extension CommandLineTaskTests {
     static var allTests = [
         ("testResourcesReadable", testResourcesReadable),
         ("testScaleSVGTask", testScaleSVGTask),
+        ("testScaleSVGTaskThrowsError", testScaleSVGTaskThrowsError),
         ("testRoundedSVGIsEqualToRoundedPDF", testRoundedSVGIsEqualToRoundedPDF),
         ("testRoundedSVGIsEqualToRoundedSVG", testRoundedSVGIsEqualToRoundedSVG),
         ("testRoundedSVGIsNotEqualToNoneRoundedSVG", testRoundedSVGIsNotEqualToNoneRoundedSVG),
+        ("testImagesWithDifferentSizeAreNotEqual", testImagesWithDifferentSizeAreNotEqual),
     ]
 }
