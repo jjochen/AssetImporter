@@ -19,6 +19,46 @@ public struct AssetImporter {
         case new
     }
 
+    internal struct ImportStateCounter: CustomStringConvertible {
+        var imported = 0
+        var skipped = 0
+        var new = 0
+
+        mutating func increment(forState state: ImportState) {
+            switch state {
+            case .imported:
+                imported += 1
+            case .skipped:
+                skipped += 1
+            case .new:
+                new += 1
+            }
+        }
+
+        func currentCount(forState state: ImportState) -> Int {
+            switch state {
+            case .imported:
+                return imported
+            case .skipped:
+                return skipped
+            case .new:
+                return new
+            }
+        }
+
+        var description: String {
+            var components: [String] = []
+            components.append(description(forState: .imported))
+            components.append(description(forState: .skipped))
+            components.append(description(forState: .new))
+            return components.joined(separator: "\n")
+        }
+
+        func description(forState state: ImportState) -> String {
+            return "\(state.rawValue.capitalized): \(currentCount(forState: state))"
+        }
+    }
+
     public static func importAssets(originPath: String,
                                     destinationPath: String,
                                     pdfPath: String,
@@ -42,57 +82,57 @@ public struct AssetImporter {
             throw AssetImporterError.noFilesFound(extension: fileExtensionPDF, path: destinationFolder.path)
         }
 
-        var numberOfNewItems = 0
-        var numberOfImportedItems = 0
-        var numberOfSkippedItems = 0
-
-        // TODO: needs refactoring
+        var counter = ImportStateCounter()
         try svgFiles.forEach { (fileName: String, svgFile: File) in
-            var state: ImportState
-            let pdfFilePath = pdfFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
-            let size = iconSize(forFile: fileName)
-            try CommandLineTask.scaleSVG(at: svgFile.path,
-                                         destination: pdfFilePath,
-                                         size: size,
-                                         scale: scale)
-            let pdfFile = try File(path: pdfFilePath)
-            if let assetFile = existingAssets[fileName] {
-                if force || !CommandLineTask.image(at: pdfFilePath,
-                                                   isEqualToImageAt: assetFile.path) {
-                    guard let assetParent = assetFile.parent else {
-                        throw AssetImporterError.unknown(message: "file has no no parent")
-                    }
-                    try assetFile.delete()
-                    try pdfFile.copy(to: assetParent)
-                    state = .imported
-                } else {
-                    state = .skipped
-                }
-            } else {
-                try pdfFile.copy(to: newItemFolder)
-                state = .new
-            }
+            let existingAsset = existingAssets[fileName]
+            let newAsset = try convert(svgFile: svgFile, destination: pdfFolder, scale: scale)
+            let state = try importAsset(newAsset,
+                                        existingAsset: existingAsset,
+                                        newAssetsFolder: newItemFolder,
+                                        force: force)
 
             print("\(fileName): \(state)")
-            switch state {
-            case .imported:
-                numberOfImportedItems += 1
-            case .skipped:
-                numberOfSkippedItems += 1
-            case .new:
-                numberOfNewItems += 1
-            }
+            counter.increment(forState: state)
         }
-
-        print("\n")
-        print("Imported: \(numberOfImportedItems)")
-        print("Skipped: \(numberOfSkippedItems)")
-        print("New: \(numberOfNewItems)")
-        print("\n")
+        print("\n\(counter)\n")
     }
 }
 
 internal extension AssetImporter {
+    static func importAsset(_ newAsset: File,
+                            existingAsset: File?,
+                            newAssetsFolder: Folder,
+                            force: Bool) throws -> ImportState {
+        guard let existingAsset = existingAsset else {
+            try newAsset.copy(to: newAssetsFolder)
+            return .new
+        }
+
+        guard force || !imageFile(existingAsset, isEqual: newAsset) else {
+            return .skipped
+        }
+
+        try existingAsset.replace(withFile: newAsset)
+        return .imported
+    }
+
+    static func convert(svgFile: File, destination: Folder, scale: Float) throws -> File {
+        let fileName = svgFile.nameExcludingExtension
+        let pdfFilePath = destination.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
+        let size = iconSize(forFile: svgFile.nameExcludingExtension)
+        try CommandLineTask.scaleSVG(at: svgFile.path,
+                                     destination: pdfFilePath,
+                                     size: size,
+                                     scale: scale)
+        let pdfFile = try File(path: pdfFilePath)
+        return pdfFile
+    }
+
+    static func imageFile(_ file1: File, isEqual file2: File) -> Bool {
+        return CommandLineTask.image(at: file1.path,
+                                     isEqualToImageAt: file2.path)
+    }
+
     static func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
         var mapping: [String: File] = [:]
         try folder.files.recursive.enumerated().forEach { _, file in

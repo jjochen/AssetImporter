@@ -20,3 +20,13 @@ internal extension Folder {
         return url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
     }
 }
+
+internal extension File {
+    func replace(withFile file: File) throws {
+        guard let parent = parent else {
+            throw AssetImporterError.unknown(message: "file has no no parent")
+        }
+        try delete()
+        try file.copy(to: parent)
+    }
+}
