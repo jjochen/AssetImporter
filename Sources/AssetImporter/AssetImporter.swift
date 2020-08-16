@@ -13,52 +13,6 @@ public struct AssetImporter {
     private static let fileExtensionPDF = "pdf"
     private static let fileExtensionSVG = "svg"
 
-    internal enum ImportState: String {
-        case imported
-        case skipped
-        case new
-    }
-
-    internal struct ImportStateCounter: CustomStringConvertible {
-        var imported = 0
-        var skipped = 0
-        var new = 0
-
-        mutating func increment(forState state: ImportState) {
-            switch state {
-            case .imported:
-                imported += 1
-            case .skipped:
-                skipped += 1
-            case .new:
-                new += 1
-            }
-        }
-
-        func currentCount(forState state: ImportState) -> Int {
-            switch state {
-            case .imported:
-                return imported
-            case .skipped:
-                return skipped
-            case .new:
-                return new
-            }
-        }
-
-        var description: String {
-            var components: [String] = []
-            components.append(description(forState: .imported))
-            components.append(description(forState: .skipped))
-            components.append(description(forState: .new))
-            return components.joined(separator: "\n")
-        }
-
-        func description(forState state: ImportState) -> String {
-            return "\(state.rawValue.capitalized): \(currentCount(forState: state))"
-        }
-    }
-
     public static func importAssets(originPath: String,
                                     destinationPath: String,
                                     pdfPath: String,
@@ -70,17 +24,8 @@ public struct AssetImporter {
         let pdfFolder = try Folder(path: pdfPath, createIfNeeded: true)
         let newItemFolder = try Folder(path: newPath, createIfNeeded: true)
 
-        let svgFiles = try filePathMapping(forFolder: originFolder,
-                                           fileExtension: fileExtensionSVG)
-        guard !svgFiles.isEmpty else {
-            throw AssetImporterError.noFilesFound(extension: fileExtensionSVG, path: originFolder.path)
-        }
-
-        let existingAssets = try filePathMapping(forFolder: destinationFolder,
-                                                 fileExtension: fileExtensionPDF)
-        guard !existingAssets.isEmpty else {
-            throw AssetImporterError.noFilesFound(extension: fileExtensionPDF, path: destinationFolder.path)
-        }
+        let svgFiles = try filePathMapping(forFolder: originFolder, fileExtension: fileExtensionSVG)
+        let existingAssets = try filePathMapping(forFolder: destinationFolder, fileExtension: fileExtensionPDF)
 
         var counter = ImportStateCounter()
         try svgFiles.forEach { (fileName: String, svgFile: File) in
@@ -108,7 +53,7 @@ internal extension AssetImporter {
             return .new
         }
 
-        guard force || !imageFile(existingAsset, isEqual: newAsset) else {
+        guard force || !asset(existingAsset, isEqual: newAsset) else {
             return .skipped
         }
 
@@ -128,9 +73,9 @@ internal extension AssetImporter {
         return pdfFile
     }
 
-    static func imageFile(_ file1: File, isEqual file2: File) -> Bool {
-        return CommandLineTask.image(at: file1.path,
-                                     isEqualToImageAt: file2.path)
+    static func asset(_ asset1: File, isEqual asset2: File) -> Bool {
+        return CommandLineTask.image(at: asset1.path,
+                                     isEqualToImageAt: asset2.path)
     }
 
     static func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
@@ -145,6 +90,11 @@ internal extension AssetImporter {
             }
             mapping[fileName] = file
         }
+
+        guard !mapping.isEmpty else {
+            throw AssetImporterError.noFilesFound(extension: fileExtension, path: folder.path)
+        }
+
         return mapping
     }
 
