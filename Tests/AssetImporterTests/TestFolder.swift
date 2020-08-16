@@ -1,10 +1,3 @@
-//
-//  TestFolder.swift
-//  ArgumentParser
-//
-//  Created by Jochen on 06.08.20.
-//
-
 import Files
 import Foundation
 
@@ -86,8 +79,12 @@ struct TestFolder {
         return try file(forResource: resource).path
     }
 
-    func filePathInWorkFolder(forFileNamed name: String) -> String {
+    func pathInWorkFolder(withName name: String) -> String {
         return workFolder.url.appendingPathComponent(name).path
+    }
+
+    func filePathInWorkFolder(forFileNamed name: String) -> String {
+        return pathInWorkFolder(withName: name)
     }
 
     func delete() throws {

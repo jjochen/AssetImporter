@@ -1,10 +1,3 @@
-//
-//  CommandLineTaskTests.swift
-//  ArgumentParser
-//
-//  Created by Jochen on 08.08.20.
-//
-
 @testable import AssetImporter
 import Files
 import Foundation

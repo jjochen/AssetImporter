@@ -1,10 +1,3 @@
-//
-//  Folder+Convenience.swift
-//  AssetImporter
-//
-//  Created by Jochen on 06.08.20.
-//
-
 import Files
 import Foundation
 

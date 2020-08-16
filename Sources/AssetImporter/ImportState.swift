@@ -1,12 +1,12 @@
 import Foundation
 
-internal enum ImportState: String {
+public enum ImportState: String {
     case imported
     case skipped
     case new
 }
 
-internal struct ImportStateCounter: CustomStringConvertible {
+public struct ImportStateCounter: CustomStringConvertible {
     var imported = 0
     var skipped = 0
     var new = 0
@@ -33,7 +33,7 @@ internal struct ImportStateCounter: CustomStringConvertible {
         }
     }
 
-    var description: String {
+    public var description: String {
         var components: [String] = []
         components.append(description(forState: .imported))
         components.append(description(forState: .skipped))

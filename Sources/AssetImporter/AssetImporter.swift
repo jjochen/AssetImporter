@@ -1,59 +1,55 @@
-//
-//  main.swift
-//  AssetImport
-//
-//  Created by Jochen on 05.06.20.
-//  Copyright © 2020 Jochen Pfeiffer. All rights reserved.
-//
-
 import Files
 import Foundation
 
 public struct AssetImporter {
-    private static let fileExtensionPDF = "pdf"
-    private static let fileExtensionSVG = "svg"
+    private let fileExtensionPDF = "pdf"
+    private let fileExtensionSVG = "svg"
 
-    public static func importAssets(originPath: String,
-                                    destinationPath: String,
-                                    pdfPath: String,
-                                    newPath: String,
-                                    scale: Float,
-                                    force: Bool) throws {
-        let originFolder = try Folder(path: originPath)
-        let destinationFolder = try Folder(path: destinationPath)
-        let pdfFolder = try Folder(path: pdfPath, createIfNeeded: true)
-        let newItemFolder = try Folder(path: newPath, createIfNeeded: true)
+    private let originSVGFolder: Folder
+    private let assetCatalogFolder: Folder
+    private let intermediatePDFFolder: Folder
+    private let newAssetsFolder: Folder
 
-        let svgFiles = try filePathMapping(forFolder: originFolder, fileExtension: fileExtensionSVG)
-        let existingAssets = try filePathMapping(forFolder: destinationFolder, fileExtension: fileExtensionPDF)
+    public init(originSVGFolderPath: String,
+                assetCatalogPath: String,
+                intermediatePDFFolderPath: String,
+                newAssetsFolderPath: String) throws {
+        originSVGFolder = try Folder(path: originSVGFolderPath)
+        assetCatalogFolder = try Folder(path: assetCatalogPath)
+        intermediatePDFFolder = try Folder(path: intermediatePDFFolderPath, createIfNeeded: true)
+        newAssetsFolder = try Folder(path: newAssetsFolderPath, createIfNeeded: true)
+    }
+
+    @discardableResult
+    public func importAssets(withDefaultScale scale: Float, importAll: Bool) throws -> ImportStateCounter {
+        let svgFiles = try filePathMapping(forFolder: originSVGFolder, fileExtension: fileExtensionSVG)
+        let existingAssets = try filePathMapping(forFolder: assetCatalogFolder, fileExtension: fileExtensionPDF)
 
         var counter = ImportStateCounter()
         try svgFiles.forEach { (fileName: String, svgFile: File) in
             let existingAsset = existingAssets[fileName]
-            let newAsset = try convert(svgFile: svgFile, destination: pdfFolder, scale: scale)
-            let state = try importAsset(newAsset,
-                                        existingAsset: existingAsset,
-                                        newAssetsFolder: newItemFolder,
-                                        force: force)
-
-            print("\(fileName): \(state)")
+            let state = try importSVGFile(svgFile,
+                                          existingAsset: existingAsset,
+                                          defaultScale: scale,
+                                          importAll: importAll)
             counter.increment(forState: state)
+            print("\(fileName): \(state)")
         }
         print("\n\(counter)\n")
+        return counter
     }
 }
 
 internal extension AssetImporter {
-    static func importAsset(_ newAsset: File,
-                            existingAsset: File?,
-                            newAssetsFolder: Folder,
-                            force: Bool) throws -> ImportState {
+    func importSVGFile(_ svgFile: File, existingAsset: File?, defaultScale: Float, importAll: Bool) throws -> ImportState {
+        let newAsset = try convert(svgFile: svgFile, defaultScale: defaultScale)
+
         guard let existingAsset = existingAsset else {
             try newAsset.copy(to: newAssetsFolder)
             return .new
         }
 
-        guard force || !asset(existingAsset, isEqual: newAsset) else {
+        guard importAll || !asset(existingAsset, isEqual: newAsset) else {
             return .skipped
         }
 
@@ -61,24 +57,23 @@ internal extension AssetImporter {
         return .imported
     }
 
-    static func convert(svgFile: File, destination: Folder, scale: Float) throws -> File {
+    func convert(svgFile: File, defaultScale: Float) throws -> File {
         let fileName = svgFile.nameExcludingExtension
-        let pdfFilePath = destination.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
-        let size = iconSize(forFile: svgFile.nameExcludingExtension)
+        let pdfFilePath = intermediatePDFFolder.filePath(forFileWithName: fileName, fileExtension: fileExtensionPDF)
+        let size = iconSize(forFile: fileName)
         try CommandLineTask.scaleSVG(at: svgFile.path,
                                      destination: pdfFilePath,
                                      size: size,
-                                     scale: scale)
+                                     scale: defaultScale)
         let pdfFile = try File(path: pdfFilePath)
         return pdfFile
     }
 
-    static func asset(_ asset1: File, isEqual asset2: File) -> Bool {
-        return CommandLineTask.image(at: asset1.path,
-                                     isEqualToImageAt: asset2.path)
+    func asset(_ asset1: File, isEqual asset2: File) -> Bool {
+        return CommandLineTask.image(at: asset1.path, isEqualToImageAt: asset2.path)
     }
 
-    static func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
+    func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
         var mapping: [String: File] = [:]
         try folder.files.recursive.enumerated().forEach { _, file in
             guard file.extension == fileExtension else {
@@ -98,9 +93,10 @@ internal extension AssetImporter {
         return mapping
     }
 
-    static func iconSize(forFile fileName: String) -> CGSize? {
-        guard let range = fileName.range(of: #"_(\d+)pt"#,
-                                         options: .regularExpression), !range.isEmpty
+    func iconSize(forFile fileName: String) -> CGSize? {
+        guard
+            let range = fileName.range(of: #"_(\d+)pt"#, options: .regularExpression),
+            !range.isEmpty
         else {
             return nil
         }

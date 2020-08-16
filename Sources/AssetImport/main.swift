@@ -1,11 +1,3 @@
-//
-//  main.swift
-//  AssetImport
-//
-//  Created by Jochen on 05.06.20.
-//  Copyright © 2020 Jochen Pfeiffer. All rights reserved.
-//
-
 import ArgumentParser
 import AssetImporter
 import Foundation
@@ -30,12 +22,11 @@ struct AssetImport: ParsableCommand {
     var force = false
 
     mutating func run() throws {
-        try AssetImporter.importAssets(originPath: originPath,
-                                       destinationPath: destinationPath,
-                                       pdfPath: pdfPath,
-                                       newPath: newPath,
-                                       scale: scale,
-                                       force: force)
+        let importer = try AssetImporter(originSVGFolderPath: originPath,
+                                         assetCatalogPath: destinationPath,
+                                         intermediatePDFFolderPath: pdfPath,
+                                         newAssetsFolderPath: newPath)
+        try importer.importAssets(withDefaultScale: scale, importAll: force)
     }
 }
 

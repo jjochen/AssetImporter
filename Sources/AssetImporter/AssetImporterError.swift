@@ -1,10 +1,3 @@
-//
-//  AssetImporterError.swift
-//  ArgumentParser
-//
-//  Created by Jochen on 06.08.20.
-//
-
 import Foundation
 
 internal enum AssetImporterError: Error {
