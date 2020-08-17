@@ -64,7 +64,8 @@ struct TestFolder {
     let workFolder: Folder
 
     init() throws {
-        let mainFolder = try Folder.temporary.createSubfolderIfNeeded(withName: "AssetImporter")
+        let parent = try Folder(path: "/tmp")
+        let mainFolder = try parent.createSubfolderIfNeeded(withName: "AssetImporter")
         folder = try mainFolder.createSubfolder(named: NSUUID().uuidString)
         resourceFolder = try folder.createSubfolder(named: "Resources")
         workFolder = try folder.createSubfolder(named: "Tests")

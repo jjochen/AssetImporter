@@ -118,6 +118,11 @@ extension AssetImporterTests {
 extension AssetImporterTests {
     static var allTests = [
         ("testImporterNotNil", testImporterNotNil),
+        ("testImporterCopiesNewFilesToNewItemsFolder", testImporterCopiesNewFilesToNewItemsFolder),
+        ("testImporterImportsAllWhenForced", testImporterImportsAllWhenForced),
+        ("testFilePathMapping", testFilePathMapping),
+        ("testFilePathMappingThrowsForEmptyFolder", testFilePathMappingThrowsForEmptyFolder),
+        ("testFilePathMappingThrowsForDuplicateFile", testFilePathMappingThrowsForDuplicateFile),
         ("testIconSizeFromFileName", testIconSizeFromFileName),
     ]
 }
