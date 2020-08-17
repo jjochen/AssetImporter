@@ -17,6 +17,9 @@ install:
 clean:
 	@rm -rf $(BUILD_DIR)
 
+dependencies:
+	@brew bundle
+
 format:
 	@swiftformat .
 	@swiftlint autocorrect
