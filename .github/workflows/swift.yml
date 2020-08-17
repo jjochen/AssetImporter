@@ -13,8 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: brew bundle -v
+    - name: Install imagemagick
+      run: brew install imagemagick
+    - name: Install librsvg
+      run: brew install librsvg
     - name: Build
       run: swift build -v
     - name: Run tests
