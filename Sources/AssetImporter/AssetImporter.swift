@@ -22,6 +22,8 @@ public struct AssetImporter {
 
     @discardableResult
     public func importAssets(withDefaultScale scale: Float, importAll: Bool) throws -> ImportStateCounter {
+        try CommandLineTask.checkExternalDependencies()
+
         let svgFiles = try filePathMapping(forFolder: originSVGFolder, fileExtension: fileExtensionSVG)
         let existingAssets = try filePathMapping(forFolder: assetCatalogFolder, fileExtension: fileExtensionPDF)
 

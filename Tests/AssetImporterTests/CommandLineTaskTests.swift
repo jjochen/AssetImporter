@@ -24,6 +24,10 @@ final class CommandLineTaskTests: XCTestCase {
         super.tearDown()
     }
 
+    func testExternalDependencies() {
+        XCTAssertNoThrow(try CommandLineTask.checkExternalDependencies())
+    }
+
     func testResourcesReadable() {
         XCTAssertNotNil(try testFolder.file(forResource: .add16ptSVG))
         XCTAssertNotNil(try testFolder.file(forResource: .add16ptRoundedSVG))

@@ -27,9 +27,22 @@ internal struct CommandLineTask {
             throw AssetImporterError.commandLineError(message: result.error)
         }
     }
+
+    static func checkExternalDependencies() throws {
+        try ensureAvailability(ofCommand: launchPathImageMagick)
+        try ensureAvailability(ofCommand: launchPathRSVG)
+    }
 }
 
 private extension CommandLineTask {
+    static func ensureAvailability(ofCommand command: String) throws {
+        let arguments = ["--version"]
+        let result = runProcess(withExecutablePath: command, arguments: arguments)
+        if !result.success {
+            throw AssetImporterError.commandLineError(message: result.error)
+        }
+    }
+
     @discardableResult
     private static func runProcess(withExecutablePath path: String,
                                    arguments: [String]?) -> (success: Bool, output: String, error: String) {
