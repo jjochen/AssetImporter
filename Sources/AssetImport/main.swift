@@ -1,6 +1,7 @@
 import ArgumentParser
 import AssetImporter
 import Foundation
+import Progress
 
 struct AssetImport: ParsableCommand {
     @Option(name: .shortAndLong, help: "Origin folder path.")
@@ -21,12 +22,24 @@ struct AssetImport: ParsableCommand {
     @Flag(help: "Force import.")
     var force = false
 
+    @Flag(help: "Verbose output.")
+    var verbose = false
+
     mutating func run() throws {
-        let importer = try AssetImporter(originSVGFolderPath: originPath,
+        var importer = try AssetImporter(originSVGFolderPath: originPath,
                                          assetsCatalogPath: destinationPath,
                                          intermediatePDFFolderPath: pdfPath,
                                          newAssetsSubfolderName: newAssetsSubfolder)
-        try importer.importAssets(withDefaultScale: scale, importAll: force)
+
+        var progressBar: ProgressBar?
+        importer.progress = { total, _ in
+            if progressBar == nil {
+                progressBar = ProgressBar(count: total)
+            }
+            progressBar?.next()
+        }
+
+        try importer.importAssets(withDefaultScale: scale, importAll: force, verbose: verbose)
     }
 }
 

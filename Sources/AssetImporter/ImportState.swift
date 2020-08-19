@@ -7,9 +7,13 @@ public enum ImportState: String {
 }
 
 public struct ImportStateCounter: CustomStringConvertible {
-    var replaced = 0
-    var skipped = 0
-    var new = 0
+    var replaced: Int = 0
+    var skipped: Int = 0
+    var new: Int = 0
+
+    var total: Int {
+        return replaced + skipped + new
+    }
 
     mutating func increment(forState state: ImportState) {
         switch state {

@@ -10,6 +10,8 @@ public struct AssetImporter {
     private let intermediatePDFFolder: Folder
     private let newAssetsSubfolderName: String
 
+    public var progress: ((_ total: Int, _ count: Int) -> Void)?
+
     public init(originSVGFolderPath: String,
                 assetsCatalogPath: String,
                 intermediatePDFFolderPath: String,
@@ -21,11 +23,18 @@ public struct AssetImporter {
     }
 
     @discardableResult
-    public func importAssets(withDefaultScale scale: Float, importAll: Bool) throws -> ImportStateCounter {
+    public func importAssets(withDefaultScale scale: Float,
+                             importAll: Bool = false,
+                             verbose: Bool = false) throws -> ImportStateCounter {
         try CommandLineTask.checkExternalDependencies()
 
-        let svgFiles = try filePathMapping(forFolder: originSVGFolder, fileExtension: fileExtensionSVG)
-        let existingAssets = try filePathMapping(forFolder: assetsCatalogFolder, fileExtension: fileExtensionPDF)
+        let svgFiles = try originSVGFolder.fileMapping(forFilesWithExtension: fileExtensionSVG)
+        let existingAssets = try assetsCatalogFolder.fileMapping(forFilesWithExtension: fileExtensionPDF)
+        guard !svgFiles.isEmpty else {
+            throw AssetImporterError.noFilesFound(extension: fileExtensionSVG, path: originSVGFolder.path)
+        }
+
+        let total = svgFiles.count
 
         var counter = ImportStateCounter()
         try svgFiles.forEach { (fileName: String, svgFile: File) in
@@ -35,7 +44,11 @@ public struct AssetImporter {
                                           defaultScale: scale,
                                           importAll: importAll)
             counter.increment(forState: state)
-            print("\(fileName): \(state)")
+            self.progress?(total, counter.total)
+
+            if verbose {
+                print("\(fileName): \(state)")
+            }
         }
         print("\n\(counter)\n")
         return counter
@@ -97,26 +110,6 @@ internal extension AssetImporter {
 
     func asset(_ asset1: File, isEqual asset2: File) -> Bool {
         return CommandLineTask.image(at: asset1.path, isEqualToImageAt: asset2.path)
-    }
-
-    func filePathMapping(forFolder folder: Folder, fileExtension: String) throws -> [String: File] {
-        var mapping: [String: File] = [:]
-        try folder.files.recursive.enumerated().forEach { _, file in
-            guard file.extension == fileExtension else {
-                return
-            }
-            let fileName = file.nameExcludingExtension
-            guard mapping[fileName] == nil else {
-                throw AssetImporterError.multipleFilesWithName(name: fileName, path: folder.path)
-            }
-            mapping[fileName] = file
-        }
-
-        guard !mapping.isEmpty else {
-            throw AssetImporterError.noFilesFound(extension: fileExtension, path: folder.path)
-        }
-
-        return mapping
     }
 
     func iconSize(forFile fileName: String) -> CGSize? {

@@ -12,6 +12,21 @@ internal extension Folder {
     func filePath(forFileWithName fileName: String, fileExtension: String) -> String {
         return url.appendingPathComponent(fileName).appendingPathExtension(fileExtension).path
     }
+
+    func fileMapping(forFilesWithExtension fileExtension: String) throws -> [String: File] {
+        var mapping: [String: File] = [:]
+        try files.recursive.enumerated().forEach { _, file in
+            guard file.extension == fileExtension else {
+                return
+            }
+            let fileName = file.nameExcludingExtension
+            guard mapping[fileName] == nil else {
+                throw AssetImporterError.multipleFilesWithName(name: fileName, path: path)
+            }
+            mapping[fileName] = file
+        }
+        return mapping
+    }
 }
 
 internal extension File {

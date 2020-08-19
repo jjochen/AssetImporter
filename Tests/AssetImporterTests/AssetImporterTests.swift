@@ -73,38 +73,6 @@ extension AssetImporterTests {
         }
     }
 
-    func testFilePathMapping() {
-        do {
-            let file1 = try testFolder.file(forResource: .add16ptRoundedSVG)
-            try file1.copy(to: svgFolder)
-            let file2 = try testFolder.file(forResource: .add16ptSVG)
-            try file2.copy(to: svgFolder)
-            let file3 = try testFolder.file(forResource: .add16ptRoundedPDF)
-            try file3.copy(to: svgFolder)
-            let mapping = try importer.filePathMapping(forFolder: svgFolder, fileExtension: "svg")
-            XCTAssertEqual(mapping.count, 2)
-            XCTAssertNotNil(mapping[file1.nameExcludingExtension])
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testFilePathMappingThrowsForEmptyFolder() {
-        do {
-            let file1 = try testFolder.file(forResource: .add16ptRoundedSVG)
-            try file1.copy(to: svgFolder)
-            let subfolder = try svgFolder.createSubfolder(at: "subfolder")
-            try file1.copy(to: subfolder)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-        XCTAssertThrowsError(_ = try importer.filePathMapping(forFolder: svgFolder, fileExtension: "svg"))
-    }
-
-    func testFilePathMappingThrowsForDuplicateFile() {
-        XCTAssertThrowsError(_ = try importer.filePathMapping(forFolder: svgFolder, fileExtension: "svg"))
-    }
-
     func testIconSizeFromFileName() {
         XCTAssertEqual(importer.iconSize(forFile: "icon_24pt.svg"), CGSize(width: 24, height: 24))
         XCTAssertEqual(importer.iconSize(forFile: "icon_20pt_rounded.svg"), CGSize(width: 20, height: 20))
@@ -128,9 +96,6 @@ extension AssetImporterTests {
         ("testImporterNotNil", testImporterNotNil),
         ("testImporterCopiesNewFilesToNewItemsFolder", testImporterCopiesNewFilesToNewItemsFolder),
         ("testImporterImportsAllWhenForced", testImporterImportsAllWhenForced),
-        ("testFilePathMapping", testFilePathMapping),
-        ("testFilePathMappingThrowsForEmptyFolder", testFilePathMappingThrowsForEmptyFolder),
-        ("testFilePathMappingThrowsForDuplicateFile", testFilePathMappingThrowsForDuplicateFile),
         ("testIconSizeFromFileName", testIconSizeFromFileName),
     ]
 }
