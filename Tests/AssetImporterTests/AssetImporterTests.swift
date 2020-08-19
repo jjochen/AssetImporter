@@ -114,8 +114,12 @@ extension AssetImporterTests {
     }
 
     func testImageSetCreation() {
-        let asset = try! testFolder.file(forResource: .add16ptRoundedPDF)
-        XCTAssertNoThrow(try importer.createNewAssetsCatalogEntry(withAsset: asset))
+        do {
+            let asset = try testFolder.file(forResource: .add16ptRoundedPDF)
+            try importer.createNewAssetsCatalogEntry(withAsset: asset)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
     }
 }
 
