@@ -8,7 +8,7 @@ final class AssetImporterTests: XCTestCase {
     var testFolder: TestFolder!
     var svgFolder: Folder!
     var pdfFolder: Folder!
-    var newItemsFolder: Folder!
+    var newItemsSubfolder = "new"
     var catalogFolder: Folder!
 
     override func setUp() {
@@ -18,12 +18,11 @@ final class AssetImporterTests: XCTestCase {
             let workFolder = testFolder.workFolder
             svgFolder = try workFolder.createSubfolderIfNeeded(at: "svg")
             pdfFolder = try workFolder.createSubfolderIfNeeded(at: "pdf")
-            newItemsFolder = try workFolder.createSubfolderIfNeeded(at: "new")
             catalogFolder = try workFolder.createSubfolderIfNeeded(at: "assets.xcassets")
             importer = try AssetImporter(originSVGFolderPath: svgFolder.path,
-                                         assetCatalogPath: catalogFolder.path,
+                                         assetsCatalogPath: catalogFolder.path,
                                          intermediatePDFFolderPath: pdfFolder.path,
-                                         newAssetsFolderPath: newItemsFolder.path)
+                                         newAssetsSubfolderName: newItemsSubfolder)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -52,8 +51,8 @@ extension AssetImporterTests {
             let result = try importer.importAssets(withDefaultScale: 0.5, importAll: false)
             XCTAssertEqual(result.new, 1)
             XCTAssertEqual(result.skipped, 1)
-            XCTAssertEqual(result.imported, 0)
-            XCTAssert(newItemsFolder.containsFile(named: "add_16pt.pdf"))
+            XCTAssertEqual(result.replaced, 0)
+            XCTAssert(catalogFolder.containsFile(at: "new/add_16pt.imageset/add_16pt.pdf"))
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -67,8 +66,8 @@ extension AssetImporterTests {
             let result = try importer.importAssets(withDefaultScale: 0.5, importAll: true)
             XCTAssertEqual(result.new, 1)
             XCTAssertEqual(result.skipped, 0)
-            XCTAssertEqual(result.imported, 1)
-            XCTAssert(newItemsFolder.containsFile(named: "add_16pt.pdf"))
+            XCTAssertEqual(result.replaced, 1)
+            XCTAssert(catalogFolder.containsFile(at: "new/add_16pt.imageset/add_16pt.pdf"))
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -112,6 +111,11 @@ extension AssetImporterTests {
         XCTAssertEqual(importer.iconSize(forFile: "icon_21pt"), CGSize(width: 21, height: 21))
         XCTAssertNil(importer.iconSize(forFile: "icon_24px.svg"))
         XCTAssertNil(importer.iconSize(forFile: "icon_0pt.svg"))
+    }
+
+    func testImageSetCreation() {
+        let asset = try! testFolder.file(forResource: .add16ptRoundedPDF)
+        XCTAssertNoThrow(try importer.createNewAssetsCatalogEntry(withAsset: asset))
     }
 }
 

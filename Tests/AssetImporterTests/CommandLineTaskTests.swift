@@ -120,6 +120,7 @@ final class CommandLineTaskTests: XCTestCase {
 
 extension CommandLineTaskTests {
     static var allTests = [
+        ("testExternalDependencies", testExternalDependencies),
         ("testResourcesReadable", testResourcesReadable),
         ("testScaleSVGTask", testScaleSVGTask),
         ("testScaleSVGTaskThrowsError", testScaleSVGTaskThrowsError),

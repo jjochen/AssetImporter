@@ -6,18 +6,18 @@ public struct AssetImporter {
     private let fileExtensionSVG = "svg"
 
     private let originSVGFolder: Folder
-    private let assetCatalogFolder: Folder
+    private let assetsCatalogFolder: Folder
     private let intermediatePDFFolder: Folder
-    private let newAssetsFolder: Folder
+    private let newAssetsSubfolderName: String
 
     public init(originSVGFolderPath: String,
-                assetCatalogPath: String,
+                assetsCatalogPath: String,
                 intermediatePDFFolderPath: String,
-                newAssetsFolderPath: String) throws {
+                newAssetsSubfolderName: String) throws {
         originSVGFolder = try Folder(path: originSVGFolderPath)
-        assetCatalogFolder = try Folder(path: assetCatalogPath)
+        assetsCatalogFolder = try Folder(path: assetsCatalogPath)
         intermediatePDFFolder = try Folder(path: intermediatePDFFolderPath, createIfNeeded: true)
-        newAssetsFolder = try Folder(path: newAssetsFolderPath, createIfNeeded: true)
+        self.newAssetsSubfolderName = newAssetsSubfolderName
     }
 
     @discardableResult
@@ -25,7 +25,7 @@ public struct AssetImporter {
         try CommandLineTask.checkExternalDependencies()
 
         let svgFiles = try filePathMapping(forFolder: originSVGFolder, fileExtension: fileExtensionSVG)
-        let existingAssets = try filePathMapping(forFolder: assetCatalogFolder, fileExtension: fileExtensionPDF)
+        let existingAssets = try filePathMapping(forFolder: assetsCatalogFolder, fileExtension: fileExtensionPDF)
 
         var counter = ImportStateCounter()
         try svgFiles.forEach { (fileName: String, svgFile: File) in
@@ -47,7 +47,7 @@ internal extension AssetImporter {
         let newAsset = try convert(svgFile: svgFile, defaultScale: defaultScale)
 
         guard let existingAsset = existingAsset else {
-            try newAsset.copy(to: newAssetsFolder)
+            try createNewAssetsCatalogEntry(withAsset: newAsset)
             return .new
         }
 
@@ -56,7 +56,31 @@ internal extension AssetImporter {
         }
 
         try existingAsset.replace(withFile: newAsset)
-        return .imported
+        return .replaced
+    }
+
+    func createNewAssetsCatalogEntry(withAsset asset: File) throws {
+        let importFolder = try assetsCatalogFolder.createSubfolderIfNeeded(at: newAssetsSubfolderName)
+        let imageSetFolder = try importFolder.createSubfolder(at: "\(asset.nameExcludingExtension).imageset")
+        try asset.copy(to: imageSetFolder)
+        let contents: [String: Any] = [
+            "images": [
+                [
+                    "filename": asset.name,
+                    "idiom": "universal",
+                ],
+            ],
+            "info": [
+                "author": "xcode",
+                "version": 1,
+            ],
+            "properties": [
+                "preserves-vector-representation": true,
+                "template-rendering-intent": "template",
+            ],
+        ]
+        let jsonData = try JSONSerialization.data(withJSONObject: contents, options: .prettyPrinted)
+        try imageSetFolder.createFile(at: "Contents.json", contents: jsonData)
     }
 
     func convert(svgFile: File, defaultScale: Float) throws -> File {

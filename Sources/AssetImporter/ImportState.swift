@@ -1,20 +1,20 @@
 import Foundation
 
 public enum ImportState: String {
-    case imported
+    case replaced
     case skipped
     case new
 }
 
 public struct ImportStateCounter: CustomStringConvertible {
-    var imported = 0
+    var replaced = 0
     var skipped = 0
     var new = 0
 
     mutating func increment(forState state: ImportState) {
         switch state {
-        case .imported:
-            imported += 1
+        case .replaced:
+            replaced += 1
         case .skipped:
             skipped += 1
         case .new:
@@ -24,8 +24,8 @@ public struct ImportStateCounter: CustomStringConvertible {
 
     func currentCount(forState state: ImportState) -> Int {
         switch state {
-        case .imported:
-            return imported
+        case .replaced:
+            return replaced
         case .skipped:
             return skipped
         case .new:
@@ -35,7 +35,7 @@ public struct ImportStateCounter: CustomStringConvertible {
 
     public var description: String {
         var components: [String] = []
-        components.append(description(forState: .imported))
+        components.append(description(forState: .replaced))
         components.append(description(forState: .skipped))
         components.append(description(forState: .new))
         return components.joined(separator: "\n")
